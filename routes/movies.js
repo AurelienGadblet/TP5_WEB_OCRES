@@ -3,7 +3,21 @@ var router = express.Router();
 const _ = require('lodash');
 const axios = require('axios').default;
 
-let movies ;
+let movies = [{
+	id: "0",
+	titre: "Avengers",
+	yearOfRelease: "2004",
+	duration: "143",
+	actors: ["Benoit Paire", "Maximilien Le Berger"],
+	poster : "http://lol",
+	boxOffice : "14541475",
+	rottenTomatoesScore: "78%"
+
+}
+
+
+
+];
 
 /* Lien vers la documentation de l'api :
 
@@ -25,6 +39,8 @@ router.get('/test/:nom', function(req, res) {
     .then(function (response) {
       // handle success
       const liste = response.data;
+      const year = liste.Year;
+      const boxOffice = liste.BoxOffice;
       res.status(200).json(liste);
     })
     
@@ -53,22 +69,30 @@ router.get('/:id', (req, res) => {
   });
 });
 
+
+
+
+
+
+
+
 /* Ajoute un film */
 
 //http://www.omdbapi.com/?apikey=6717538&t={nomdufilm}
 
-router.put('/:nom', (req, res) => {
+router.put('/', (req, res) => {
   // Create new unique id
+  const { title } = req.body;
   const id = _.uniqueId();
   // Insert it in array (normaly with connect the data with the database)
 
   var qs = {
     params: {
-      t: req.params.nom,
+      t: title,
       apikey: '6717538'
     }
   };
-
+pm
   axios.get('http://www.omdbapi.com', qs)
     .then(function (response) {
       // handle success
@@ -78,27 +102,45 @@ router.put('/:nom', (req, res) => {
       const duration = liste.Runtime;
       const actors = liste.Actors;
       const poster = liste.Poster;
-      const boxOffice = liste.imbdVotes;
+      const boxOffice = liste.imdbVotes;
+      
       const rottenTomatoesScore = liste.Ratings[1].Value;
-      movies.push({ id, titre, yearOfRelease, duration, actors, poster, boxOffice, rottenTomatoesScore }); 
+     
+      console.log(rottenTomatoesScore);
+      movies.push({ id, titre, yearOfRelease, duration, actors, poster, boxOffice, rottenTomatoesScore });
+
+       
+      res.status(200).json({
+    		message: `Just added ${id}`,
+    		movie : {titre, id}
+    	});
+    })
+    .catch(()=>{
+    	res.status(404).json({
+    		message: `erreur`,
+    	});
     })
 
-    res.json({
-    	message: `Just added ${id}`
-    });
+    
 });
 
+
+
+
+
+
 /* met à jour un film */
-router.post('/:nom', (req, res) => {
+router.post('/:id', (req, res) => {
   // Get the :id of the movie we want to update from the params of the request
   const { id } = req.params;
   // Find in DB
   const movieToUpdate = _.find(movies, ["id", id]);
+  //console.log(movieToUpdate);
   // Update data with new data (js is by address)
 
   var qs = {
     params: {
-      t: 'req.params.nom',
+      t: movieToUpdate.titre,
       apikey: '6717538'
     }
   };
@@ -112,17 +154,16 @@ router.post('/:nom', (req, res) => {
       const duration = liste.Runtime;
       const actors = liste.Actors;
       const poster = liste.Poster;
-      const boxOffice = liste.imbdVotes;
+      const boxOffice = liste.imdbVotes;
       const rottenTomatoesScore = liste.Ratings[1].Value;
       movie = { id, titre, yearOfRelease, duration, actors, poster, boxOffice, rottenTomatoesScore };
+       res.status(200).json({
+	    message: `Just updated ${id} :  ${movie}`
+	  });
     })
 
-  movieToUpdate.movie = movie;
-
   // Return message
-  res.json({
-    message: `Just updated ${id} with ${movie}`
-  });
+ 
 });
 
 
